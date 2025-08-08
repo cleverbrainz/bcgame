@@ -38,7 +38,14 @@ document.addEventListener("DOMContentLoaded", function () {
           firstDivValues.textContent = data.firstDiv.values
             .map((v) => `$${v.toFixed(2)}`)
             .join(", ");
-          firstDivSum.textContent = `$${data.firstDiv.sum.toFixed(2)}`;
+
+          let leftSumText = `$${data.firstDiv.sum.toFixed(2)}`;
+          if (data.firstDiv.crashSubtracted > 0) {
+            leftSumText += ` (crash subtracted: $${data.firstDiv.crashSubtracted.toFixed(
+              2
+            )})`;
+          }
+          firstDivSum.textContent = leftSumText;
         } else {
           firstDivValues.textContent = "No values found";
           firstDivSum.textContent = "$0.00";
@@ -49,7 +56,14 @@ document.addEventListener("DOMContentLoaded", function () {
           secondDivValues.textContent = data.secondDiv.values
             .map((v) => `$${v.toFixed(2)}`)
             .join(", ");
-          secondDivSum.textContent = `$${data.secondDiv.sum.toFixed(2)}`;
+
+          let rightSumText = `$${data.secondDiv.sum.toFixed(2)}`;
+          if (data.secondDiv.moonSubtracted > 0) {
+            rightSumText += ` (moon subtracted: $${data.secondDiv.moonSubtracted.toFixed(
+              2
+            )})`;
+          }
+          secondDivSum.textContent = rightSumText;
         } else {
           secondDivValues.textContent = "No values found";
           secondDivSum.textContent = "$0.00";
@@ -57,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Show success message and stats
         messageDiv.innerHTML = `<div class="success">✅ Successfully read ${data.elementsFound} element(s)</div>`;
-        statsDiv.textContent = `Found ${data.firstDiv.values.length} values in first div only`;
+        statsDiv.textContent = `Found ${data.firstDiv.values.length} normal values in left column, ${data.secondDiv.values.length} normal values in right column`;
       } else {
         messageDiv.innerHTML =
           '<div class="error">❌ Failed to read values from page</div>';
@@ -75,20 +89,14 @@ document.addEventListener("DOMContentLoaded", function () {
 function readElementValues() {
   // Helper function to extract dollar values from a column
   function extractValuesFromColumn(columnDiv) {
-    const values = [];
+    const normalValues = [];
+    const crashValues = [];
+    const moonValues = [];
 
     // Find all row containers within the column
     const rows = columnDiv.querySelectorAll("div.flex.items-center.h-10");
 
     for (const row of rows) {
-      // Skip rows that contain moon-bg-btn or crash-bg-btn (these should be excluded)
-      if (
-        row.querySelector(".moon-bg-btn") ||
-        row.querySelector(".crash-bg-btn")
-      ) {
-        continue;
-      }
-
       // Find spans that contain dollar amounts in this row
       const dollarSpans = row.querySelectorAll("span");
 
@@ -105,14 +113,21 @@ function readElementValues() {
             const num = parseFloat(cleanValue);
 
             if (!isNaN(num) && num > 0) {
-              values.push(num);
+              // Categorize based on the row's class
+              if (row.querySelector(".crash-bg-btn")) {
+                crashValues.push(num);
+              } else if (row.querySelector(".moon-bg-btn")) {
+                moonValues.push(num);
+              } else {
+                normalValues.push(num);
+              }
             }
           }
         }
       }
     }
 
-    return values;
+    return { normalValues, crashValues, moonValues };
   }
 
   try {
@@ -123,24 +138,51 @@ function readElementValues() {
       return { error: "No elements with h-[27.3rem] class found on this page" };
     }
 
-    let firstDiv = { values: [], sum: 0 };
-    let secondDiv = { values: [], sum: 0 };
+    let firstDiv = { values: [], sum: 0, crashSubtracted: 0 };
+    let secondDiv = { values: [], sum: 0, moonSubtracted: 0 };
 
     // Process each target element
     for (const element of targetElements) {
-      // Find the first div only (left column)
-      const firstMainDiv = element.querySelector("div.w-1\\/2");
+      // Find the two main divs (left and right columns)
+      const mainDivs = element.querySelectorAll("div.w-1\\/2");
 
-      if (firstMainDiv) {
-        // Process only the first div (left column)
-        const firstColumnValues = extractValuesFromColumn(firstMainDiv);
-        firstDiv.values.push(...firstColumnValues);
+      if (mainDivs.length >= 2) {
+        // Process first div (left column)
+        const firstColumnData = extractValuesFromColumn(mainDivs[0]);
+        firstDiv.values.push(...firstColumnData.normalValues);
+
+        // Calculate crash values to subtract from left column
+        const crashSum = firstColumnData.crashValues.reduce(
+          (sum, num) => sum + num,
+          0
+        );
+        firstDiv.crashSubtracted += crashSum;
+
+        // Process second div (right column)
+        const secondColumnData = extractValuesFromColumn(mainDivs[1]);
+        secondDiv.values.push(...secondColumnData.normalValues);
+
+        // Calculate moon values to subtract from right column
+        const moonSum = secondColumnData.moonValues.reduce(
+          (sum, num) => sum + num,
+          0
+        );
+        secondDiv.moonSubtracted += moonSum;
       }
     }
 
-    // Calculate sums
-    firstDiv.sum = firstDiv.values.reduce((sum, num) => sum + num, 0);
-    secondDiv.sum = secondDiv.values.reduce((sum, num) => sum + num, 0);
+    // Calculate sums: normal values minus special values
+    const firstDivNormalSum = firstDiv.values.reduce(
+      (sum, num) => sum + num,
+      0
+    );
+    const secondDivNormalSum = secondDiv.values.reduce(
+      (sum, num) => sum + num,
+      0
+    );
+
+    firstDiv.sum = firstDivNormalSum - firstDiv.crashSubtracted;
+    secondDiv.sum = secondDivNormalSum - secondDiv.moonSubtracted;
 
     return {
       firstDiv: firstDiv,
