@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Element Value Summer",
+  "version": "1.0",
+  "description": "Chrome extension to read and sum values from div elements with h-[27.3rem] class",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Element Value Summer"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ]
+}
