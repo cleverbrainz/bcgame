@@ -1,12 +1,8 @@
 document.addEventListener("DOMContentLoaded", function () {
   const readButton = document.getElementById("readValues");
-  const leftNormalValues = document.getElementById("leftNormalValues");
   const leftNormalSum = document.getElementById("leftNormalSum");
-  const leftCrashValues = document.getElementById("leftCrashValues");
   const leftCrashSum = document.getElementById("leftCrashSum");
-  const rightNormalValues = document.getElementById("rightNormalValues");
   const rightNormalSum = document.getElementById("rightNormalSum");
-  const rightMoonValues = document.getElementById("rightMoonValues");
   const rightMoonSum = document.getElementById("rightMoonSum");
   const messageDiv = document.getElementById("message");
   const statsDiv = document.getElementById("stats");
@@ -37,53 +33,13 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
-        // Display left column normal values
-        if (data.leftColumn.normalValues.length > 0) {
-          leftNormalValues.textContent = data.leftColumn.normalValues
-            .map((v) => `$${v.toFixed(2)}`)
-            .join(", ");
-          leftNormalSum.textContent = `$${data.leftColumn.normalSum.toFixed(
-            2
-          )}`;
-        } else {
-          leftNormalValues.textContent = "No normal values found";
-          leftNormalSum.textContent = "$0.00";
-        }
-
-        // Display left column crash values
-        if (data.leftColumn.crashValues.length > 0) {
-          leftCrashValues.textContent = data.leftColumn.crashValues
-            .map((v) => `$${v.toFixed(2)}`)
-            .join(", ");
-          leftCrashSum.textContent = `$${data.leftColumn.crashSum.toFixed(2)}`;
-        } else {
-          leftCrashValues.textContent = "No crash values found";
-          leftCrashSum.textContent = "$0.00";
-        }
-
-        // Display right column normal values
-        if (data.rightColumn.normalValues.length > 0) {
-          rightNormalValues.textContent = data.rightColumn.normalValues
-            .map((v) => `$${v.toFixed(2)}`)
-            .join(", ");
-          rightNormalSum.textContent = `$${data.rightColumn.normalSum.toFixed(
-            2
-          )}`;
-        } else {
-          rightNormalValues.textContent = "No normal values found";
-          rightNormalSum.textContent = "$0.00";
-        }
-
-        // Display right column moon values
-        if (data.rightColumn.moonValues.length > 0) {
-          rightMoonValues.textContent = data.rightColumn.moonValues
-            .map((v) => `$${v.toFixed(2)}`)
-            .join(", ");
-          rightMoonSum.textContent = `$${data.rightColumn.moonSum.toFixed(2)}`;
-        } else {
-          rightMoonValues.textContent = "No moon values found";
-          rightMoonSum.textContent = "$0.00";
-        }
+        // Display only the calculated sums
+        leftNormalSum.textContent = `$${data.leftColumn.normalSum.toFixed(2)}`;
+        leftCrashSum.textContent = `$${data.leftColumn.crashSum.toFixed(2)}`;
+        rightNormalSum.textContent = `$${data.rightColumn.normalSum.toFixed(
+          2
+        )}`;
+        rightMoonSum.textContent = `$${data.rightColumn.moonSum.toFixed(2)}`;
 
         // Show success message and stats
         messageDiv.innerHTML = `<div class="success">✅ Successfully read ${data.elementsFound} element(s)</div>`;
