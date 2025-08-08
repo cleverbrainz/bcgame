@@ -77,23 +77,36 @@ function readElementValues() {
   function extractValuesFromColumn(columnDiv) {
     const values = [];
 
-    // Find all spans that contain dollar amounts
-    const dollarSpans = columnDiv.querySelectorAll("span");
+    // Find all row containers within the column
+    const rows = columnDiv.querySelectorAll("div.flex.items-center.h-10");
 
-    for (const span of dollarSpans) {
-      const text = span.textContent || span.innerText || "";
+    for (const row of rows) {
+      // Skip rows that contain moon-bg-btn or crash-bg-btn (these should be excluded)
+      if (
+        row.querySelector(".moon-bg-btn") ||
+        row.querySelector(".crash-bg-btn")
+      ) {
+        continue;
+      }
 
-      // Look for dollar amounts (e.g., $123.45, $1,234.56)
-      const dollarMatches = text.match(/\$[\d,]+\.?\d*/g);
+      // Find spans that contain dollar amounts in this row
+      const dollarSpans = row.querySelectorAll("span");
 
-      if (dollarMatches) {
-        for (const match of dollarMatches) {
-          // Remove $ and commas, then parse as float
-          const cleanValue = match.replace(/[$,]/g, "");
-          const num = parseFloat(cleanValue);
+      for (const span of dollarSpans) {
+        const text = span.textContent || span.innerText || "";
 
-          if (!isNaN(num) && num > 0) {
-            values.push(num);
+        // Look for dollar amounts (e.g., $123.45, $1,234.56)
+        const dollarMatches = text.match(/\$[\d,]+\.?\d*/g);
+
+        if (dollarMatches) {
+          for (const match of dollarMatches) {
+            // Remove $ and commas, then parse as float
+            const cleanValue = match.replace(/[$,]/g, "");
+            const num = parseFloat(cleanValue);
+
+            if (!isNaN(num) && num > 0) {
+              values.push(num);
+            }
           }
         }
       }
