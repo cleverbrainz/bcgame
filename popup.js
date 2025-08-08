@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Show success message and stats
         messageDiv.innerHTML = `<div class="success">✅ Successfully read ${data.elementsFound} element(s)</div>`;
-        statsDiv.textContent = `Found ${data.firstDiv.values.length} values in left column, ${data.secondDiv.values.length} values in right column`;
+        statsDiv.textContent = `Found ${data.firstDiv.values.length} values in first div only`;
       } else {
         messageDiv.innerHTML =
           '<div class="error">❌ Failed to read values from page</div>';
@@ -128,17 +128,13 @@ function readElementValues() {
 
     // Process each target element
     for (const element of targetElements) {
-      // Find the two main divs (left and right columns)
-      const mainDivs = element.querySelectorAll("div.w-1\\/2");
+      // Find the first div only (left column)
+      const firstMainDiv = element.querySelector("div.w-1\\/2");
 
-      if (mainDivs.length >= 2) {
-        // Process first div (left column)
-        const firstColumnValues = extractValuesFromColumn(mainDivs[0]);
+      if (firstMainDiv) {
+        // Process only the first div (left column)
+        const firstColumnValues = extractValuesFromColumn(firstMainDiv);
         firstDiv.values.push(...firstColumnValues);
-
-        // Process second div (right column)
-        const secondColumnValues = extractValuesFromColumn(mainDivs[1]);
-        secondDiv.values.push(...secondColumnValues);
       }
     }
 
