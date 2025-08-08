@@ -73,6 +73,35 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Function to be injected into the page
 function readElementValues() {
+  // Helper function to extract dollar values from a column
+  function extractValuesFromColumn(columnDiv) {
+    const values = [];
+
+    // Find all spans that contain dollar amounts
+    const dollarSpans = columnDiv.querySelectorAll("span");
+
+    for (const span of dollarSpans) {
+      const text = span.textContent || span.innerText || "";
+
+      // Look for dollar amounts (e.g., $123.45, $1,234.56)
+      const dollarMatches = text.match(/\$[\d,]+\.?\d*/g);
+
+      if (dollarMatches) {
+        for (const match of dollarMatches) {
+          // Remove $ and commas, then parse as float
+          const cleanValue = match.replace(/[$,]/g, "");
+          const num = parseFloat(cleanValue);
+
+          if (!isNaN(num) && num > 0) {
+            values.push(num);
+          }
+        }
+      }
+    }
+
+    return values;
+  }
+
   try {
     // Look for elements with h-[27.3rem] class
     const targetElements = document.querySelectorAll('[class*="h-[27.3rem]"]');
@@ -112,33 +141,4 @@ function readElementValues() {
   } catch (error) {
     return { error: "Error reading elements: " + error.message };
   }
-}
-
-// Helper function to extract dollar values from a column
-function extractValuesFromColumn(columnDiv) {
-  const values = [];
-
-  // Find all spans that contain dollar amounts
-  const dollarSpans = columnDiv.querySelectorAll("span");
-
-  for (const span of dollarSpans) {
-    const text = span.textContent || span.innerText || "";
-
-    // Look for dollar amounts (e.g., $123.45, $1,234.56)
-    const dollarMatches = text.match(/\$[\d,]+\.?\d*/g);
-
-    if (dollarMatches) {
-      for (const match of dollarMatches) {
-        // Remove $ and commas, then parse as float
-        const cleanValue = match.replace(/[$,]/g, "");
-        const num = parseFloat(cleanValue);
-
-        if (!isNaN(num) && num > 0) {
-          values.push(num);
-        }
-      }
-    }
-  }
-
-  return values;
 }
