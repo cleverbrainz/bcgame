@@ -1,9 +1,13 @@
 document.addEventListener("DOMContentLoaded", function () {
   const readButton = document.getElementById("readValues");
-  const firstDivValues = document.getElementById("firstDivValues");
-  const firstDivSum = document.getElementById("firstDivSum");
-  const secondDivValues = document.getElementById("secondDivValues");
-  const secondDivSum = document.getElementById("secondDivSum");
+  const leftNormalValues = document.getElementById("leftNormalValues");
+  const leftNormalSum = document.getElementById("leftNormalSum");
+  const leftCrashValues = document.getElementById("leftCrashValues");
+  const leftCrashSum = document.getElementById("leftCrashSum");
+  const rightNormalValues = document.getElementById("rightNormalValues");
+  const rightNormalSum = document.getElementById("rightNormalSum");
+  const rightMoonValues = document.getElementById("rightMoonValues");
+  const rightMoonSum = document.getElementById("rightMoonSum");
   const messageDiv = document.getElementById("message");
   const statsDiv = document.getElementById("stats");
 
@@ -33,45 +37,57 @@ document.addEventListener("DOMContentLoaded", function () {
           return;
         }
 
-        // Display first div data
-        if (data.firstDiv.values.length > 0) {
-          firstDivValues.textContent = data.firstDiv.values
+        // Display left column normal values
+        if (data.leftColumn.normalValues.length > 0) {
+          leftNormalValues.textContent = data.leftColumn.normalValues
             .map((v) => `$${v.toFixed(2)}`)
             .join(", ");
-
-          let leftSumText = `$${data.firstDiv.sum.toFixed(2)}`;
-          if (data.firstDiv.crashSubtracted > 0) {
-            leftSumText += ` (crash subtracted: $${data.firstDiv.crashSubtracted.toFixed(
-              2
-            )})`;
-          }
-          firstDivSum.textContent = leftSumText;
+          leftNormalSum.textContent = `$${data.leftColumn.normalSum.toFixed(
+            2
+          )}`;
         } else {
-          firstDivValues.textContent = "No values found";
-          firstDivSum.textContent = "$0.00";
+          leftNormalValues.textContent = "No normal values found";
+          leftNormalSum.textContent = "$0.00";
         }
 
-        // Display second div data
-        if (data.secondDiv.values.length > 0) {
-          secondDivValues.textContent = data.secondDiv.values
+        // Display left column crash values
+        if (data.leftColumn.crashValues.length > 0) {
+          leftCrashValues.textContent = data.leftColumn.crashValues
             .map((v) => `$${v.toFixed(2)}`)
             .join(", ");
-
-          let rightSumText = `$${data.secondDiv.sum.toFixed(2)}`;
-          if (data.secondDiv.moonSubtracted > 0) {
-            rightSumText += ` (moon subtracted: $${data.secondDiv.moonSubtracted.toFixed(
-              2
-            )})`;
-          }
-          secondDivSum.textContent = rightSumText;
+          leftCrashSum.textContent = `$${data.leftColumn.crashSum.toFixed(2)}`;
         } else {
-          secondDivValues.textContent = "No values found";
-          secondDivSum.textContent = "$0.00";
+          leftCrashValues.textContent = "No crash values found";
+          leftCrashSum.textContent = "$0.00";
+        }
+
+        // Display right column normal values
+        if (data.rightColumn.normalValues.length > 0) {
+          rightNormalValues.textContent = data.rightColumn.normalValues
+            .map((v) => `$${v.toFixed(2)}`)
+            .join(", ");
+          rightNormalSum.textContent = `$${data.rightColumn.normalSum.toFixed(
+            2
+          )}`;
+        } else {
+          rightNormalValues.textContent = "No normal values found";
+          rightNormalSum.textContent = "$0.00";
+        }
+
+        // Display right column moon values
+        if (data.rightColumn.moonValues.length > 0) {
+          rightMoonValues.textContent = data.rightColumn.moonValues
+            .map((v) => `$${v.toFixed(2)}`)
+            .join(", ");
+          rightMoonSum.textContent = `$${data.rightColumn.moonSum.toFixed(2)}`;
+        } else {
+          rightMoonValues.textContent = "No moon values found";
+          rightMoonSum.textContent = "$0.00";
         }
 
         // Show success message and stats
         messageDiv.innerHTML = `<div class="success">✅ Successfully read ${data.elementsFound} element(s)</div>`;
-        statsDiv.textContent = `Found ${data.firstDiv.values.length} normal values in left column, ${data.secondDiv.values.length} normal values in right column`;
+        statsDiv.textContent = `Left: ${data.leftColumn.normalValues.length} normal + ${data.leftColumn.crashValues.length} crash | Right: ${data.rightColumn.normalValues.length} normal + ${data.rightColumn.moonValues.length} moon`;
       } else {
         messageDiv.innerHTML =
           '<div class="error">❌ Failed to read values from page</div>';
@@ -138,8 +154,18 @@ function readElementValues() {
       return { error: "No elements with h-[27.3rem] class found on this page" };
     }
 
-    let firstDiv = { values: [], sum: 0, crashSubtracted: 0 };
-    let secondDiv = { values: [], sum: 0, moonSubtracted: 0 };
+    let leftColumn = {
+      normalValues: [],
+      crashValues: [],
+      normalSum: 0,
+      crashSum: 0,
+    };
+    let rightColumn = {
+      normalValues: [],
+      moonValues: [],
+      normalSum: 0,
+      moonSum: 0,
+    };
 
     // Process each target element
     for (const element of targetElements) {
@@ -147,46 +173,39 @@ function readElementValues() {
       const mainDivs = element.querySelectorAll("div.w-1\\/2");
 
       if (mainDivs.length >= 2) {
-        // Process first div (left column)
-        const firstColumnData = extractValuesFromColumn(mainDivs[0]);
-        firstDiv.values.push(...firstColumnData.normalValues);
+        // Process left column (first div)
+        const leftColumnData = extractValuesFromColumn(mainDivs[0]);
+        leftColumn.normalValues.push(...leftColumnData.normalValues);
+        leftColumn.crashValues.push(...leftColumnData.crashValues);
 
-        // Calculate crash values to subtract from left column
-        const crashSum = firstColumnData.crashValues.reduce(
-          (sum, num) => sum + num,
-          0
-        );
-        firstDiv.crashSubtracted += crashSum;
-
-        // Process second div (right column)
-        const secondColumnData = extractValuesFromColumn(mainDivs[1]);
-        secondDiv.values.push(...secondColumnData.normalValues);
-
-        // Calculate moon values to subtract from right column
-        const moonSum = secondColumnData.moonValues.reduce(
-          (sum, num) => sum + num,
-          0
-        );
-        secondDiv.moonSubtracted += moonSum;
+        // Process right column (second div)
+        const rightColumnData = extractValuesFromColumn(mainDivs[1]);
+        rightColumn.normalValues.push(...rightColumnData.normalValues);
+        rightColumn.moonValues.push(...rightColumnData.moonValues);
       }
     }
 
-    // Calculate sums: normal values minus special values
-    const firstDivNormalSum = firstDiv.values.reduce(
+    // Calculate sums
+    leftColumn.normalSum = leftColumn.normalValues.reduce(
       (sum, num) => sum + num,
       0
     );
-    const secondDivNormalSum = secondDiv.values.reduce(
+    leftColumn.crashSum = leftColumn.crashValues.reduce(
       (sum, num) => sum + num,
       0
     );
-
-    firstDiv.sum = firstDivNormalSum - firstDiv.crashSubtracted;
-    secondDiv.sum = secondDivNormalSum - secondDiv.moonSubtracted;
+    rightColumn.normalSum = rightColumn.normalValues.reduce(
+      (sum, num) => sum + num,
+      0
+    );
+    rightColumn.moonSum = rightColumn.moonValues.reduce(
+      (sum, num) => sum + num,
+      0
+    );
 
     return {
-      firstDiv: firstDiv,
-      secondDiv: secondDiv,
+      leftColumn: leftColumn,
+      rightColumn: rightColumn,
       elementsFound: targetElements.length,
     };
   } catch (error) {
